@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}WEARLUB{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-brand">
+      <img src="{{ url_for('static', filename='img/logo.png') }}"
+           alt="Wearlub" class="sidebar-logo-img">
+      <img src="{{ url_for('static', filename='img/logo.png') }}"
+           alt="W" class="sidebar-logo-mini">
+    </div>
+
+    <!-- Usuário -->
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ session.get('usuario_nome','U')[0].upper() }}</div>
+      <div class="user-info">
+        <div class="user-greeting">Bem-vindo(a),</div>
+        <div class="user-name">{{ session.get('usuario_nome','') }}</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+
+      <a href="{{ url_for('dashboard') }}"
+         class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <i class="fa-solid fa-gauge-high"></i>
+        <span class="nav-label">Painel</span>
+      </a>
+
+      {% set fin_pages = ['receita','despesa','fluxo_caixa','saude'] %}
+      <div class="nav-item {% if request.endpoint in fin_pages %}active open{% endif %}"
+           data-sub="sub-fin">
+        <i class="fa-solid fa-coins"></i>
+        <span class="nav-label">Financeiro</span>
+        <i class="fa-solid fa-chevron-down nav-arrow"></i>
+      </div>
+      <div class="submenu {% if request.endpoint in fin_pages %}open{% endif %}" id="sub-fin">
+        <a href="{{ url_for('fluxo_caixa') }}" class="{% if request.endpoint=='fluxo_caixa' %}active{% endif %}">
+          <i class="fa-solid fa-list"></i> Fluxo de Caixa
+        </a>
+        <a href="{{ url_for('receita') }}" class="{% if request.endpoint=='receita' %}active{% endif %}">
+          <i class="fa-solid fa-circle-arrow-up"></i> Lançar Receita
+        </a>
+        <a href="{{ url_for('despesa') }}" class="{% if request.endpoint=='despesa' %}active{% endif %}">
+          <i class="fa-solid fa-circle-arrow-down"></i> Lançar Despesa
+        </a>
+        <a href="{{ url_for('saude') }}" class="{% if request.endpoint=='saude' %}active{% endif %}">
+          <i class="fa-solid fa-heart-pulse"></i> Saúde da Empresa
+        </a>
+      </div>
+
+      {% set cad_pages = ['clientes','cliente_novo','cliente_editar','funcionarios','funcionario_novo','funcionario_editar','usuarios','usuario_novo','usuario_editar'] %}
+      <div class="nav-item {% if request.endpoint in cad_pages %}active open{% endif %}"
+           data-sub="sub-cad">
+        <i class="fa-solid fa-table-list"></i>
+        <span class="nav-label">Cadastros</span>
+        <i class="fa-solid fa-chevron-down nav-arrow"></i>
+      </div>
+      <div class="submenu {% if request.endpoint in cad_pages %}open{% endif %}" id="sub-cad">
+        <a href="{{ url_for('clientes') }}" class="{% if request.endpoint in ['clientes','cliente_novo','cliente_editar'] %}active{% endif %}">
+          <i class="fa-solid fa-building"></i> Clientes
+        </a>
+        <a href="{{ url_for('funcionarios') }}" class="{% if request.endpoint in ['funcionarios','funcionario_novo','funcionario_editar'] %}active{% endif %}">
+          <i class="fa-solid fa-hard-hat"></i> Funcionários
+        </a>
+        <a href="{{ url_for('categorias') }}" class="{% if request.endpoint == 'categorias' %}active{% endif %}">
+          <i class="fa-solid fa-tags"></i> Serviços / Produtos
+        </a>
+        <a href="{{ url_for('usuarios') }}" class="{% if request.endpoint in ['usuarios','usuario_novo','usuario_editar'] %}active{% endif %}">
+          <i class="fa-solid fa-users-gear"></i> Usuários
+        </a>
+      </div>
+
+      {% set prosp_pages = ["prospeccao","prospeccao_nova","prospeccao_editar"] %}
+      <div class="nav-item {% if request.endpoint in prosp_pages %}active open{% endif %}"
+           data-sub="sub-prosp">
+        <i class="fa-solid fa-bullseye"></i>
+        <span class="nav-label">Prospecção</span>
+        <i class="fa-solid fa-chevron-down nav-arrow"></i>
+      </div>
+      <div class="submenu {% if request.endpoint in prosp_pages %}open{% endif %}" id="sub-prosp">
+        <a href="{{ url_for('prospeccao') }}" class="{% if request.endpoint=='prospeccao' %}active{% endif %}">
+          <i class="fa-solid fa-list-check"></i> Propostas
+        </a>
+        <a href="{{ url_for('prospeccao_nova') }}" class="{% if request.endpoint=='prospeccao_nova' %}active{% endif %}">
+          <i class="fa-solid fa-plus"></i> Nova Proposta
+        </a>
+      </div>
+
+      <a href="{{ url_for('configuracoes') }}"
+         class="nav-item {% if request.endpoint == 'configuracoes' %}active{% endif %}">
+        <i class="fa-solid fa-sliders"></i>
+        <span class="nav-label">Configurações</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('logout') }}" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></a>
+      <a href="{{ url_for('configuracoes') }}" title="Configurações"><i class="fa-solid fa-gear"></i></a>
+      <a href="#" onclick="document.documentElement.requestFullscreen()" title="Tela cheia">
+        <i class="fa-solid fa-expand"></i>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar" id="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn-toggle" id="btnToggle"><i class="fa-solid fa-bars"></i></button>
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="topbar-avatar">{{ session.get('usuario_nome','U')[0].upper() }}</div>
+        <span>{{ session.get('usuario_nome','') }} ( WEARLUB )
+          <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:3px;"></i>
+        </span>
+      </div>
+      <span style="margin-left:12px;">
+        <a href="{{ url_for('logout') }}" style="color:#aaa;font-size:13px;">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </a>
+      </span>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <main class="main-content" id="mainContent">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for cat, msg in messages %}
+            <li class="flash-msg flash-{{ cat }}">
+              <i class="fa-solid
+                {% if cat=='success' %}fa-circle-check
+                {% elif cat=='warning' %}fa-triangle-exclamation
+                {% elif cat=='danger' %}fa-circle-xmark
+                {% else %}fa-circle-info{% endif %}"></i>
+              {{ msg }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+/* ── Formatação brasileira global ─────────────────────────────────────────
+   .valor-brl  → R$ 5.000,00  (campo de valor monetário)
+   .pct-br     → 10,93        (campo de percentual, sem símbolo)
+   Antes de submeter o form, converte de volta para float (ponto decimal).
+───────────────────────────────────────────────────────────────────────── */
+(function () {
+  // Formata número float para padrão BR: 4800.00 → "4.800,00"
+  function floatToBRL(n) {
+    return parseFloat(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  // Converte digitação para float: "4.800,00" → 4800.00
+  function brlToFloat(str) {
+    return (str || '0').replace(/\./g, '').replace(',', '.');
+  }
+  // Formata enquanto digita (apenas dígitos → divide por 100)
+  function fmtDigitando(val) {
+    var digits = val.replace(/\D/g, '') || '0';
+    var n = parseInt(digits) / 100;
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    /* ── valor-brl ── */
+    document.querySelectorAll('.valor-brl').forEach(function (inp) {
+      // Formata valor inicial vindo do servidor (ex: "4800.00")
+      var raw = parseFloat(inp.value.replace(',', '.')) || 0;
+      inp.value = floatToBRL(raw);
+
+      inp.addEventListener('input', function () {
+        this.value = fmtDigitando(this.value);
+      });
+      // Antes de enviar, converte para float com ponto
+      inp.form && inp.form.addEventListener('submit', function () {
+        inp.value = brlToFloat(inp.value);
+      });
+    });
+
+    /* ── pct-br ── */
+    document.querySelectorAll('.pct-br').forEach(function (inp) {
+      var raw = parseFloat(inp.value.replace(',', '.')) || 0;
+      inp.value = floatToBRL(raw);
+
+      inp.addEventListener('input', function () {
+        this.value = fmtDigitando(this.value);
+      });
+      inp.form && inp.form.addEventListener('submit', function () {
+        inp.value = brlToFloat(inp.value);
+      });
+    });
+  });
+})();
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

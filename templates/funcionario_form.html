@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if f %}Editar{% else %}Novo{% endif %} Funcionário — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">{% if f %}Editar Funcionário{% else %}Novo Funcionário{% endif %}</div>
+<div class="card-panel" style="max-width:600px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-hard-hat" style="color:var(--gold-dark);margin-right:8px;"></i>Dados do Funcionário</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+    <form method="POST">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Nome Completo *</label>
+          <input type="text" name="nome" class="form-control" value="{{ f.nome if f else '' }}" required>
+        </div>
+        <div class="form-group">
+          <label>Cargo</label>
+          <select name="cargo" class="form-control">
+            {% for op in cargos %}
+              <option {% if f and f.cargo == op %}selected{% endif %}>{{ op }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-gold"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+        <a href="{{ url_for('funcionarios') }}" class="btn btn-dark"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

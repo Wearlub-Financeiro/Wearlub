@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Funcionários — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Funcionários / Técnicos</div>
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-hard-hat" style="color:var(--gold-dark);margin-right:8px;"></i>Equipe Cadastrada</h5>
+    <a href="{{ url_for('funcionario_novo') }}" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i> Novo</a>
+  </div>
+  <div class="card-panel-body">
+    {% if funcionarios %}
+    <div class="table-wrap">
+      <table class="wt">
+        <thead><tr><th>#</th><th>Nome</th><th>Cargo</th><th style="text-align:center;">Ações</th></tr></thead>
+        <tbody>
+          {% for f in funcionarios %}
+          <tr>
+            <td style="color:#aaa;">{{ f.id }}</td>
+            <td><strong>{{ f.nome }}</strong></td>
+            <td>{{ f.cargo or '—' }}</td>
+            <td>
+              <div class="actions" style="justify-content:center;">
+                <a href="{{ url_for('funcionario_editar', id=f.id) }}" class="btn btn-gold btn-sm"><i class="fa-solid fa-pen"></i></a>
+                <form method="POST" action="{{ url_for('funcionario_excluir', id=f.id) }}"
+                      data-confirm="Excluir '{{ f.nome }}'?">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="empty-state"><i class="fa-solid fa-users"></i><p>Nenhum funcionário cadastrado.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

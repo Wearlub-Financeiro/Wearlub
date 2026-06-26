@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Prospecção{% endblock %}
+{% block content %}
+
+<style>
+.prosp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.prosp-header h2{margin:0;font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px}
+.btn-nova{background:#f0a500;color:#1a1a2e;font-weight:700;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.btn-nova:hover{background:#d4920a;color:#1a1a2e}
+.metrics-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:900px){.metrics-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+.metric-card{background:#1e2a3a;border-radius:10px;padding:16px 12px;text-align:center;border:1px solid #2a3a4a}
+.metric-val{font-size:22px;font-weight:700;margin-bottom:4px}
+.metric-lbl{font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:.04em}
+.filters-wrap{background:#1e2a3a;border:1px solid #2a3a4a;border-radius:12px;padding:16px;margin-bottom:16px}
+.filters-row1{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.filters-row2{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.filters-wrap input,.filters-wrap select{background:#162030;border:1px solid #2a3a4a;color:#e0e0e0;padding:8px 12px;border-radius:8px;font-size:13px}
+.f-busca{flex:2;min-width:180px}
+.f-status{flex:1;min-width:150px}
+.f-resp{flex:1;min-width:150px}
+.f-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px}
+.f-group label{font-size:11px;color:#8899aa;text-transform:uppercase;letter-spacing:.04em}
+.btn-filtrar{background:#f0a500;color:#1a1a2e;font-weight:700;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap}
+.btn-limpar{background:#2a3a4a;color:#e0e0e0;border:none;padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;text-decoration:none;white-space:nowrap}
+.table-wrap{background:#1e2a3a;border-radius:12px;overflow:hidden;border:1px solid #2a3a4a}
+.prosp-table{width:100%;border-collapse:collapse;font-size:13px}
+.prosp-table thead th{background:#162030;color:#8899aa;padding:11px 14px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #2a3a4a}
+.prosp-table tbody tr{border-bottom:1px solid #1a2535}
+.prosp-table tbody tr:last-child{border-bottom:none}
+.prosp-table tbody tr:hover{background:#162030}
+.prosp-table td{padding:12px 14px;vertical-align:middle;color:#dde}
+.empresa-nome{font-weight:600;color:#fff;font-size:13px}
+.empresa-contato{font-size:12px;color:#8899aa;margin-top:2px}
+.wa-link{color:#25d366;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:2px}
+.wa-link:hover{color:#1ab955}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-enviada{background:#1a3a5c;color:#5ba3f5}
+.badge-negociacao{background:#3d2e00;color:#f0a500}
+.badge-aprovada{background:#1a3d1a;color:#4caf50}
+.badge-reprovada{background:#3d1a1a;color:#f44336}
+.badge-aguardando{background:#2a2a4a;color:#9c9cff}
+.valor-cell{font-weight:700;color:#4caf50}
+.btn-edit{background:#2a3a4a;border:none;color:#f0a500;padding:6px 10px;border-radius:6px;cursor:pointer;text-decoration:none;font-size:13px}
+.btn-edit:hover{background:#f0a500;color:#1a1a2e}
+.btn-del{background:#2a3a4a;border:none;color:#f44336;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:13px}
+.btn-del:hover{background:#f44336;color:#fff}
+.empty-row td{text-align:center;padding:48px;color:#8899aa}
+</style>
+
+<div class="prosp-header">
+  <h2><i class="fa-solid fa-bullseye" style="color:#f0a500"></i> Prospecção</h2>
+  <a href="{{ url_for('prospeccao_nova') }}" class="btn-nova">
+    <i class="fa-solid fa-plus"></i> Nova Proposta
+  </a>
+</div>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-val" style="color:#fff">{{ totais['total'] or 0 }}</div>
+    <div class="metric-lbl">Total</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val" style="color:#5ba3f5">{{ por_status['Enviada'] }}</div>
+    <div class="metric-lbl">Enviadas</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val" style="color:#f0a500">{{ por_status['Em negociação'] }}</div>
+    <div class="metric-lbl">Negociação</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val" style="color:#4caf50">{{ por_status['Aprovada'] }}</div>
+    <div class="metric-lbl">Aprovadas</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val" style="color:#f44336">{{ por_status['Reprovada'] }}</div>
+    <div class="metric-lbl">Reprovadas</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-val" style="color:#4caf50;font-size:15px">R$ {{ "%.2f"|format(totais['soma'] or 0) }}</div>
+    <div class="metric-lbl">Valor total</div>
+  </div>
+</div>
+
+<form method="get" class="filters-wrap">
+  <div class="filters-row1">
+    <input type="text" name="busca" class="f-busca" placeholder="Buscar empresa ou contato..." value="{{ filtro_busca }}">
+    <select name="status" class="f-status">
+      <option value="">Todos os status</option>
+      {% for s in status_list %}
+      <option value="{{ s }}" {{ 'selected' if filtro_status==s }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <select name="resp" class="f-resp">
+      <option value="">Todos responsáveis</option>
+      {% for r in responsaveis %}
+      <option value="{{ r }}" {{ 'selected' if filtro_resp==r }}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filters-row2">
+    <div class="f-group">
+      <label style="color:#f0a500"><i class="fa-solid fa-calendar-days"></i> Data inicial</label>
+      <input type="date" name="data_de" value="{{ filtro_de }}">
+    </div>
+    <div class="f-group">
+      <label style="color:#f0a500"><i class="fa-solid fa-calendar-days"></i> Data final</label>
+      <input type="date" name="data_ate" value="{{ filtro_ate }}">
+    </div>
+    <button type="submit" class="btn-filtrar"><i class="fa-solid fa-filter"></i> Filtrar</button>
+    <a href="{{ url_for('prospeccao') }}" class="btn-limpar"><i class="fa-solid fa-xmark"></i> Limpar</a>
+  </div>
+</form>
+
+<div class="table-wrap">
+  <table class="prosp-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Empresa / Contato</th>
+        <th>Proposta</th>
+        <th>Serviços</th>
+        <th>Valor</th>
+        <th>Status</th>
+        <th>Responsável</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if propostas %}
+        {% for p in propostas %}
+        <tr>
+          <td style="color:#8899aa">{{ loop.index }}</td>
+          <td>
+            <div class="empresa-nome">{{ p['empresa'] }}</div>
+            <div class="empresa-contato">{{ p['contato'] }}</div>
+            {% if p['telefone'] %}
+            <a class="wa-link" href="https://wa.me/55{{ p['telefone']|replace('(','') |replace(')','') |replace(' ','') |replace('-','') }}" target="_blank">
+              <i class="fa-brands fa-whatsapp"></i> {{ p['telefone'] }}
+            </a>
+            {% endif %}
+          </td>
+          <td style="color:#8899aa">{{ p['num_proposta'] or '—' }}</td>
+          <td style="color:#8899aa;max-width:160px;white-space:normal;line-height:1.5">{{ p['svcs_nomes'] or '—' }}</td>
+          <td class="valor-cell">R$ {{ "%.2f"|format(p['valor_total'] or 0) }}</td>
+          <td>
+            {% if p['status'] == 'Enviada' %}<span class="badge badge-enviada">Enviada</span>
+            {% elif p['status'] == 'Em negociação' %}<span class="badge badge-negociacao">Em negociação</span>
+            {% elif p['status'] == 'Aprovada' %}<span class="badge badge-aprovada">Aprovada</span>
+            {% elif p['status'] == 'Reprovada' %}<span class="badge badge-reprovada">Reprovada</span>
+            {% else %}<span class="badge badge-aguardando">Aguardando</span>{% endif %}
+          </td>
+          <td style="font-size:13px">{{ p['responsavel'] }}</td>
+          <td style="color:#8899aa;font-size:12px;white-space:nowrap">
+            {% if p['data_envio'] %}{{ p['data_envio'][8:10] }}/{{ p['data_envio'][5:7] }}/{{ p['data_envio'][0:4] }}{% else %}—{% endif %}
+          </td>
+          <td style="white-space:nowrap">
+            <a href="{{ url_for('prospeccao_editar', id=p['id']) }}" class="btn-edit" title="Editar">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            <form action="{{ url_for('prospeccao_excluir', id=p['id']) }}" method="post" style="display:inline" onsubmit="return confirm('Excluir esta proposta?')">
+              <button type="submit" class="btn-del" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr class="empty-row">
+          <td colspan="9">
+            <i class="fa-solid fa-clipboard-list" style="font-size:32px;display:block;margin-bottom:8px;opacity:.4"></i>
+            Nenhuma proposta encontrada.
+            <a href="{{ url_for('prospeccao_nova') }}" style="color:#f0a500">Cadastrar nova</a>
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

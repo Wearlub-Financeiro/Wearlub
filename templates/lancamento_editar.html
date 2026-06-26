@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Editar Lançamento — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Editar Lançamento #{{ l.id }}</div>
+<div class="card-panel" style="max-width:780px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-pen-to-square" style="color:var(--gold);margin-right:8px;"></i>
+      Editar — {{ l.tipo }} / {{ l.categoria }}
+    </h5>
+  </div>
+  <div class="card-panel-body">
+    <form method="POST" action="{{ url_for('lancamento_editar', id=l.id) }}">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Categoria</label>
+          <select name="categoria" class="form-control">
+            {% for c in categorias %}
+              <option {% if c == l.categoria %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Conta</label>
+          <select name="origem_conta" class="form-control">
+            <option {% if l.origem_conta == 'Conta Normal' %}selected{% endif %}>Conta Normal</option>
+            <option {% if l.origem_conta == 'Saúde da Empresa' %}selected{% endif %}>Saúde da Empresa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Valor Bruto (R$)</label>
+          <input type="text" name="valor_bruto" id="valor_bruto" class="form-control"
+                 value="{{ '%.2f'|format(l.valor_bruto) }}" required
+                 placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Vencimento</label>
+          <input type="date" name="data_vencimento" class="form-control"
+                 value="{{ l.data_vencimento or '' }}">
+        </div>
+      </div>
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" class="form-control">
+            <option {% if l.status == 'Pendente' %}selected{% endif %}>Pendente</option>
+            <option {% if l.status == 'Pago/Recebido' %}selected{% endif %}>Pago/Recebido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>NF-e</label>
+          <input type="text" class="form-control" value="{{ l.nf_numero or '' }}" readonly
+                 style="background:#f5f5f5;color:#999;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descrição / Observações</label>
+        <input type="text" name="descricao" class="form-control"
+               value="{{ l.descricao or '' }}">
+      </div>
+
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="submit" class="btn btn-gold">
+          <i class="fa-solid fa-floppy-disk"></i> Confirmar Alteração
+        </button>
+        <a href="{{ url_for('fluxo_caixa') }}" class="btn btn-dark">
+          <i class="fa-solid fa-arrow-left"></i> Voltar
+        </a>
+
+        <!-- Botão Excluir -->
+        <form method="POST" action="{{ url_for('lancamento_excluir', id=l.id) }}"
+              style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir este lançamento?')">
+          <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i> Excluir
+          </button>
+        </form>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+var campoValor = document.getElementById('valor_bruto');
+// Apenas mostra o valor atual sem reformatar
+// O usuário digita normal: 4800.00 ou 4800,00
+campoValor.closest('form').addEventListener('submit', function() {
+  // Converte vírgula para ponto antes de enviar
+  campoValor.value = campoValor.value.replace(',','.');
+});
+</script>
+{% endblock %}

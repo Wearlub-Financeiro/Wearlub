@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Lançar Receita — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Lançar Receita</div>
+<div class="card-panel" style="max-width:780px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-circle-arrow-up" style="color:var(--success);margin-right:8px;"></i>Nova Entrada de Capital</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button type="button" onclick="setTipo('servico')" id="btn-servico"
+        class="btn btn-gold" style="flex:1;border:2px solid var(--gold);">
+        <i class="fa-solid fa-wrench"></i> Faturamento de Serviço
+      </button>
+      <button type="button" onclick="setTipo('emprestimo')" id="btn-emprestimo"
+        class="btn btn-outline" style="flex:1;border:2px solid var(--gold);">
+        <i class="fa-solid fa-handshake"></i> Empréstimo / Aporte
+      </button>
+    </div>
+
+    <!-- SERVIÇO -->
+    <form method="POST" action="{{ url_for('receita') }}" id="form-servico">
+      <input type="hidden" name="tipo_entrada" value="servico">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Categoria</label>
+          <select name="categoria" class="form-control">
+            {% for c in categorias_receita %}<option>{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Número NF-e</label>
+          <input type="text" name="nf_numero" class="form-control" placeholder="Ex: NF-4892">
+        </div>
+      </div>
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Valor Bruto (R$)</label>
+          <input type="text" name="valor_bruto" id="valor_bruto" class="form-control valor-brl"
+                 placeholder="0,00" required>
+        </div>
+        <div class="form-group">
+          <label>Vencimento</label>
+          <input type="date" name="data_vencimento" class="form-control"
+                 value="{{ hoje_30 }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>💰 Aplicar Dedução de Impostos e Comissão?</label>
+        <select name="aplicar_deducao" class="form-control" id="sel_deducao" onchange="mostrarResumo()">
+          <option value="sim">✅ Sim — deduzir impostos e comissão</option>
+          <option value="nao">❌ Não — valor líquido igual ao bruto</option>
+        </select>
+      </div>
+
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Blindagem Saúde da Empresa</label>
+          <select name="blindagem" class="form-control">
+            <option value="0">0% — Tudo no Caixa Livre</option>
+            <option value="5">5% do Líquido</option>
+            <option value="10">10% do Líquido</option>
+            <option value="100">100% — Reter Lucro Líquido Integral</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" class="form-control">
+            <option>Pendente</option>
+            <option>Pago/Recebido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Descrição / Observações</label>
+        <input type="text" name="descricao" class="form-control" placeholder="Detalhes do serviço">
+      </div>
+      <div class="fin-preview">
+        <i class="fa-solid fa-calculator"></i>
+        Impostos ({{ cfg.pis + cfg.cofins + cfg.iss + cfg.irpj + cfg.csll }}%) +
+        Comissão ({{ cfg.comissao_padrao }}%) —
+        <strong>Líquido estimado: <span id="previewLiquido">R$ 0,00</span></strong>
+      </div>
+      <input type="hidden" id="taxa_imposto"
+             value="{{ cfg.pis + cfg.cofins + cfg.iss + cfg.irpj + cfg.csll }}">
+      <input type="hidden" id="taxa_comissao" value="{{ cfg.comissao_padrao }}">
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button type="submit" class="btn btn-gold"><i class="fa-solid fa-floppy-disk"></i> Confirmar Faturamento</button>
+        <a href="{{ url_for('fluxo_caixa') }}" class="btn btn-dark"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+      </div>
+    </form>
+
+    <!-- EMPRÉSTIMO (oculto inicialmente) -->
+    <form method="POST" action="{{ url_for('receita') }}" id="form-emprestimo" style="display:none;">
+      <input type="hidden" name="tipo_entrada" value="emprestimo">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>De quem é o empréstimo? *</label>
+          <input type="text" name="credor" class="form-control" placeholder="Nome / Empresa" required>
+        </div>
+        <div class="form-group">
+          <label>Valor (R$) *</label>
+          <input type="text" name="valor_bruto" class="form-control valor-brl" placeholder="0,00" required>
+        </div>
+      </div>
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Juros combinados (%)</label>
+          <input type="text" name="juros" class="form-control pct-br" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Prazo de Quitação</label>
+          <input type="date" name="data_quitacao" class="form-control" value="{{ hoje_90 }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Já caiu na conta?</label>
+        <select name="status" class="form-control">
+          <option>Pago/Recebido</option>
+          <option>Pendente</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Observações</label>
+        <input type="text" name="descricao" class="form-control" placeholder="Motivo / detalhes">
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button type="submit" class="btn btn-gold"><i class="fa-solid fa-floppy-disk"></i> Confirmar Empréstimo</button>
+        <a href="{{ url_for('fluxo_caixa') }}" class="btn btn-dark"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function setTipo(t) {
+  var fS = document.getElementById('form-servico');
+  var fE = document.getElementById('form-emprestimo');
+  var bS = document.getElementById('btn-servico');
+  var bE = document.getElementById('btn-emprestimo');
+
+  fS.style.display = (t === 'servico') ? 'block' : 'none';
+  fE.style.display = (t === 'emprestimo') ? 'block' : 'none';
+
+  // Botão ativo = amarelo preenchido, inativo = só contorno
+  if (t === 'servico') {
+    bS.style.background = 'var(--gold)'; bS.style.color = '#000';
+    bE.style.background = 'transparent'; bE.style.color = 'var(--gold-dark)';
+  } else {
+    bE.style.background = 'var(--gold)'; bE.style.color = '#000';
+    bS.style.background = 'transparent'; bS.style.color = 'var(--gold-dark)';
+  }
+}
+
+var taxaImp = parseFloat(document.getElementById('taxa_imposto').value) / 100;
+var taxaCom = parseFloat(document.getElementById('taxa_comissao').value) / 100;
+
+function brlToFloat(str) {
+  return parseFloat((str || '0').replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function mostrarResumo() {
+  var bruto   = brlToFloat(document.getElementById('valor_bruto').value);
+  var deduzir = document.getElementById('sel_deducao').value === 'sim';
+  var liq     = deduzir ? bruto - bruto * (taxaImp + taxaCom) : bruto;
+  document.getElementById('previewLiquido').textContent =
+    'R$ ' + liq.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+document.getElementById('valor_bruto').addEventListener('input', mostrarResumo);
+document.getElementById('sel_deducao').addEventListener('change', mostrarResumo);
+</script>
+{% endblock %}

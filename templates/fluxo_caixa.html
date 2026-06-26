@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Fluxo de Caixa — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Fluxo de Caixa</div>
+
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+  <a href="{{ url_for('receita') }}" class="btn btn-success"><i class="fa-solid fa-circle-arrow-up"></i> Nova Receita</a>
+  <a href="{{ url_for('despesa') }}" class="btn btn-danger"><i class="fa-solid fa-circle-arrow-down"></i> Nova Despesa</a>
+</div>
+
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h5>Todos os Lançamentos</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+    {% if lancamentos %}
+    <div class="table-wrap">
+      <table class="wt">
+        <thead>
+          <tr>
+            <th>#</th><th>Tipo</th><th>Categoria</th><th>Descrição</th>
+            <th>Conta</th><th>Valor Bruto</th><th>Valor Líquido</th>
+            <th>Vencimento</th><th>Status</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in lancamentos %}
+          <tr>
+            <td style="color:#aaa;">{{ l.id }}</td>
+            <td>
+              {% if l.tipo == 'Entrada' %}<span class="badge badge-ok"><i class="fa-solid fa-arrow-up"></i> Entrada</span>
+              {% elif l.tipo == 'Saída' %}<span class="badge badge-danger"><i class="fa-solid fa-arrow-down"></i> Saída</span>
+              {% else %}<span class="badge badge-info"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transf.</span>{% endif %}
+            </td>
+            <td>{{ l.categoria }}</td>
+            <td>{{ l.descricao[:40] }}{% if l.descricao|length > 40 %}…{% endif %}</td>
+            <td>{{ l.origem_conta or '—' }}</td>
+            <td>R$ {{ '%.2f'|format(l.valor_bruto)|replace('.', '#')|replace(',', '.')|replace('#', ',') }}</td>
+            <td>
+              <span title="{% if l.deducoes_impostos and l.deducoes_impostos > 0 %}Impostos: R$ {{ '%.2f'|format(l.deducoes_impostos) }} | Comissão: R$ {{ '%.2f'|format(l.comissao) }}{% else %}Sem deduções{% endif %}"
+                    style="cursor:help;border-bottom:1px dashed #aaa;">
+                R$ {{ '%.2f'|format(l.valor_liquido)|replace('.', '#')|replace(',', '.')|replace('#', ',') }}
+                {% if l.deducoes_impostos and l.deducoes_impostos > 0 %}
+                  <i class="fa-solid fa-circle-info" style="font-size:10px;color:#aaa;margin-left:2px;"></i>
+                {% endif %}
+              </span>
+            </td>
+            <td>{{ l.data_vencimento or '—' }}</td>
+            <td>
+              {% if l.status == 'Pago/Recebido' %}<span class="badge badge-ok">Pago</span>
+              {% else %}<span class="badge badge-pend">Pendente</span>{% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <a href="{{ url_for('lancamento_editar', id=l.id) }}"
+                   class="btn btn-gold" style="padding:4px 10px;font-size:12px;">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar
+                </a>
+                <form method="POST" action="{{ url_for('lancamento_excluir', id=l.id) }}"
+                      style="margin:0;"
+                      onsubmit="return confirm('Excluir lançamento #{{ l.id }}?')">
+                  <button type="submit" class="btn btn-danger"
+                          style="padding:4px 10px;font-size:12px;">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:#aaa;margin-top:10px;">{{ lancamentos|length }} lançamento(s)</p>
+    {% else %}
+      <div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Nenhum lançamento cadastrado.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

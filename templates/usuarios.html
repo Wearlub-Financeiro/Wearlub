@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Usuários — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Usuários do Sistema</div>
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-users-gear" style="color:var(--gold-dark);margin-right:8px;"></i>Usuários</h5>
+    <a href="{{ url_for('usuario_novo') }}" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i> Novo</a>
+  </div>
+  <div class="card-panel-body">
+    {% if usuarios %}
+    <div class="table-wrap">
+      <table class="wt">
+        <thead><tr><th>#</th><th>Nome</th><th>Login</th><th>Perfil</th><th style="text-align:center;">Ações</th></tr></thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td style="color:#aaa;">{{ u.id }}</td>
+            <td><strong>{{ u.nome }}</strong></td>
+            <td><code>{{ u.login }}</code></td>
+            <td>
+              {% if u.perfil == 'admin' %}
+                <span class="badge badge-gold"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+              {% else %}
+                <span class="badge badge-user"><i class="fa-solid fa-user"></i> Usuário</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions" style="justify-content:center;">
+                <a href="{{ url_for('usuario_editar', id=u.id) }}" class="btn btn-gold btn-sm"><i class="fa-solid fa-pen"></i></a>
+                <form method="POST" action="{{ url_for('usuario_excluir', id=u.id) }}"
+                      data-confirm="Excluir usuário '{{ u.nome }}'?">
+                  <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="empty-state"><i class="fa-solid fa-users"></i><p>Nenhum usuário cadastrado.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

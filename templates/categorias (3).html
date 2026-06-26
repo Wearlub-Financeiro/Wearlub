@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Serviços e Produtos — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Serviços e Produtos</div>
+
+<!-- Formulário nova categoria -->
+<div class="card-panel" style="max-width:600px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-plus" style="color:var(--gold);margin-right:8px;"></i>Adicionar Novo</h5>
+  </div>
+  <div class="card-panel-body">
+    <form method="POST" action="{{ url_for('categoria_nova') }}">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select name="tipo" class="form-control">
+            <option value="Serviço">Serviço</option>
+            <option value="Venda">Venda / Produto</option>
+            <option value="Outros">Empréstimo / Aporte</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nome da Categoria</label>
+          <input type="text" name="nome" class="form-control"
+                 placeholder="Ex: Fabricação de Filtro" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-gold">
+        <i class="fa-solid fa-plus"></i> Adicionar
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Lista de categorias -->
+<div class="card-panel" style="max-width:600px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-list" style="margin-right:8px;"></i>Categorias Cadastradas</h5>
+  </div>
+  <div class="card-panel-body">
+    {% if categorias %}
+    <table class="wt">
+      <thead>
+        <tr><th>Tipo</th><th>Nome</th><th>Ação</th></tr>
+      </thead>
+      <tbody>
+        {% for c in categorias %}
+        <tr>
+          <td>
+            {% if c.tipo == 'Venda' %}
+              <span class="badge badge-info">Venda</span>
+            {% elif c.tipo == 'Outros' %}
+              <span class="badge badge-pend">Empréstimo</span>
+            {% else %}
+              <span class="badge badge-ok">Serviço</span>
+            {% endif %}
+          </td>
+          <td>{{ c.nome }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('categoria_excluir', id=c.id) }}"
+                  onsubmit="return confirm('Excluir categoria {{ c.nome }}?')">
+              <button type="submit" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Nenhuma categoria cadastrada.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

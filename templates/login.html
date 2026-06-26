@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>WEARLUB — Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-box">
+
+    <div class="login-logo">
+      <img src="{{ url_for('static', filename='img/logo.png') }}"
+           alt="Wearlub" style="width:220px;margin-bottom:10px;">
+      <p>Gestão Administrativa & Controles Preditivos</p>
+    </div>
+
+    {% if erro %}
+      <div class="flash-msg flash-danger" style="margin-bottom:16px;">
+        <i class="fa-solid fa-circle-xmark"></i> {{ erro }}
+      </div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label><i class="fa-solid fa-user"></i> &nbsp;Usuário</label>
+        <input type="text" name="usuario" class="form-control"
+               placeholder="Digite seu login" required autofocus autocomplete="username"
+               oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="form-group">
+        <label><i class="fa-solid fa-lock"></i> &nbsp;Senha</label>
+        <input type="password" name="senha" class="form-control"
+               placeholder="Digite sua senha" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-gold">
+        <i class="fa-solid fa-right-to-bracket"></i> Entrar
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:24px;font-size:11px;color:#bbb;">
+      WEARLUB &copy; {{ ano }} — Lubrificação e Controles Preditivos
+    </p>
+  </div>
+</div>
+</body>
+</html>

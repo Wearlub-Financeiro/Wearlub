@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{% if c %}Editar{% else %}Novo{% endif %} Cliente — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">{% if c %}Editar Cliente{% else %}Novo Cliente{% endif %}</div>
+<div class="card-panel" style="max-width:600px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-building" style="color:var(--gold-dark);margin-right:8px;"></i>Dados do Cliente</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+    <form method="POST">
+      <div class="form-row col-2">
+        <div class="form-group">
+          <label>Razão Social / Nome *</label>
+          <input type="text" name="nome" class="form-control" value="{{ c.nome if c else '' }}" required>
+        </div>
+        <div class="form-group">
+          <label>CNPJ / CPF</label>
+          <input type="text" name="cnpj" class="form-control" value="{{ c.cnpj if c else '' }}">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="submit" class="btn btn-gold"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+        <a href="{{ url_for('clientes') }}" class="btn btn-dark"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

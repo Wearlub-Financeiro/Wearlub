@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Painel — WEARLUB{% endblock %}
+
+{% macro brl(v) %}
+  {%- set s = '%.2f'|format(v) -%}
+  {%- set partes = s.split('.') -%}
+  {%- set inteiro = partes[0] -%}
+  {%- set decimal = partes[1] -%}
+  {%- set n = inteiro|int -%}
+  {%- if n >= 1000000 -%}
+    {{ (n // 1000000) }}.{{ '%03d'|format((n % 1000000) // 1000) }}.{{ '%03d'|format(n % 1000) }},{{ decimal }}
+  {%- elif n >= 1000 -%}
+    {{ (n // 1000) }}.{{ '%03d'|format(n % 1000) }},{{ decimal }}
+  {%- else -%}
+    {{ inteiro }},{{ decimal }}
+  {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<div class="page-title">Painel Financeiro</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+    <div>
+      <div class="kpi-label">Conta Normal</div>
+      <div class="kpi-value">R$ {{ brl(saldo_normal) }}</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background:#fff3cd;color:#b8860b;"><i class="fa-solid fa-heart-pulse"></i></div>
+    <div>
+      <div class="kpi-label">Saúde da Empresa</div>
+      <div class="kpi-value gold">R$ {{ brl(saldo_saude) }}</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background:#d4edda;color:#155724;"><i class="fa-solid fa-circle-arrow-up"></i></div>
+    <div>
+      <div class="kpi-label">A Receber</div>
+      <div class="kpi-value green">R$ {{ brl(a_receber) }}</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background:#f8d7da;color:#721c24;"><i class="fa-solid fa-circle-arrow-down"></i></div>
+    <div>
+      <div class="kpi-label">A Pagar</div>
+      <div class="kpi-value red">R$ {{ brl(a_pagar) }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Alertas -->
+{% if alertas %}
+<div class="card-panel">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-bell" style="color:#dc3545;margin-right:8px;"></i>Alertas de Vencimento</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+    {% for a in alertas %}
+      <div class="alert {{ a.classe }}"><i class="fa-solid {{ a.icone }}"></i> <strong>{{ a.texto }}</strong></div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="alert alert-success" style="margin-bottom:20px;">
+  <i class="fa-solid fa-circle-check"></i> <strong>Nenhum vencimento crítico no momento.</strong>
+</div>
+{% endif %}
+
+<!-- GRÁFICOS -->
+<div class="form-row col-2" style="margin-bottom:20px;">
+
+  <!-- Receitas x Despesas -->
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h5><i class="fa-solid fa-chart-bar" style="color:var(--gold-dark);margin-right:8px;"></i>Receitas x Despesas</h5>
+      <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+    </div>
+    <div class="card-panel-body">
+      <canvas id="chartBar" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Pizza categorias -->
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h5><i class="fa-solid fa-chart-pie" style="color:var(--gold-dark);margin-right:8px;"></i>Categorias de Despesa</h5>
+      <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+    </div>
+    <div class="card-panel-body">
+      <canvas id="chartPizza" height="200"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<div class="form-row col-2" style="margin-bottom:20px;">
+
+  <!-- Saldos Doughnut -->
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h5><i class="fa-solid fa-circle-half-stroke" style="color:var(--gold-dark);margin-right:8px;"></i>Distribuição de Saldos</h5>
+      <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+    </div>
+    <div class="card-panel-body" style="display:flex;justify-content:center;">
+      <canvas id="chartDoughnut" height="200" style="max-width:300px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Últimos lançamentos -->
+  <div class="card-panel">
+    <div class="card-panel-header">
+      <h5><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px;"></i>Últimos Lançamentos</h5>
+      <div style="display:flex;gap:8px;">
+        <a href="{{ url_for('fluxo_caixa') }}" class="btn btn-outline btn-sm">Ver tudo</a>
+        <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+      </div>
+    </div>
+    <div class="card-panel-body">
+      {% if ultimos %}
+      <div class="table-wrap">
+        <table class="wt">
+          <thead>
+            <tr><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for l in ultimos %}
+            <tr>
+              <td>
+                {% if l.tipo=='Entrada' %}<span class="badge badge-ok"><i class="fa-solid fa-arrow-up"></i> Entrada</span>
+                {% elif l.tipo=='Saída' %}<span class="badge badge-danger"><i class="fa-solid fa-arrow-down"></i> Saída</span>
+                {% else %}<span class="badge badge-info">Transf.</span>{% endif %}
+              </td>
+              <td>{{ l.descricao[:35] }}{% if l.descricao|length > 35 %}…{% endif %}</td>
+              <td>R$ {{ '%.2f'|format(l.valor_bruto) }}</td>
+              <td>
+                {% if l.status=='Pago/Recebido' %}<span class="badge badge-ok">Pago</span>
+                {% else %}<span class="badge badge-pend">Pendente</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fa-solid fa-inbox"></i>
+          <p>Nenhum lançamento ainda.</p>
+          <a href="{{ url_for('receita') }}" class="btn btn-gold" style="margin-top:12px;">
+            <i class="fa-solid fa-plus"></i> Primeiro lançamento
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+fetch('/api/graficos')
+  .then(r => r.json())
+  .then(d => {
+
+    const cores = ['#F2B705','#1c2a37','#28a745','#dc3545','#17a2b8','#6c757d','#fd7e14','#6f42c1'];
+
+    // ── Receitas x Despesas ─────────────────────────────
+    new Chart(document.getElementById('chartBar'), {
+      type: 'bar',
+      data: {
+        labels: d.labels_bar.length ? d.labels_bar : ['Sem dados'],
+        datasets: [
+          { label: 'Receitas', data: d.receitas_bar, backgroundColor: '#28a745', borderRadius: 4 },
+          { label: 'Despesas', data: d.despesas_bar, backgroundColor: '#dc3545', borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } }
+        }
+      }
+    });
+
+    // ── Pizza categorias ─────────────────────────────────
+    new Chart(document.getElementById('chartPizza'), {
+      type: 'pie',
+      data: {
+        labels: d.labels_pizza.length ? d.labels_pizza : ['Sem despesas'],
+        datasets: [{
+          data: d.values_pizza.length ? d.values_pizza : [1],
+          backgroundColor: cores,
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 11 } } },
+          tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.parsed.toLocaleString('pt-BR', {minimumFractionDigits:2}) } }
+        }
+      }
+    });
+
+    // ── Doughnut saldos ──────────────────────────────────
+    new Chart(document.getElementById('chartDoughnut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Conta Normal', 'Saúde da Empresa'],
+        datasets: [{
+          data: [d.saldo_normal || 0.01, d.saldo_saude || 0.01],
+          backgroundColor: ['#1c2a37', '#F2B705'],
+          borderWidth: 3,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { label: ctx => ctx.label + ': R$ ' + ctx.parsed.toLocaleString('pt-BR', {minimumFractionDigits:2}) } }
+        }
+      }
+    });
+
+  });
+</script>
+{% endblock %}

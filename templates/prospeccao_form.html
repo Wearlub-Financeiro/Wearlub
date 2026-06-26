@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar Proposta' if p else 'Nova Proposta' }}{% endblock %}
+{% block content %}
+
+<style>
+.pf-header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.btn-voltar{background:#2a3a4a;color:#e0e0e0;border:none;padding:9px 16px;border-radius:8px;cursor:pointer;text-decoration:none;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn-voltar:hover{background:#3a4a5a;color:#fff}
+.pf-header h2{margin:0;font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-section{background:#1e2a3a;border-radius:12px;border:1px solid #2a3a4a;padding:24px;margin-bottom:20px}
+.card-section h5{color:#f0a500;font-size:15px;font-weight:600;margin:0 0 18px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid.full{grid-template-columns:1fr}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:12px;color:#8899aa;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select,.form-group textarea{background:#162030;border:1px solid #2a3a4a;color:#e0e0e0;padding:10px 12px;border-radius:8px;font-size:14px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#f0a500}
+.form-group textarea{resize:vertical;min-height:80px}
+.svc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.svc-row input{background:#162030;border:1px solid #2a3a4a;color:#e0e0e0;padding:9px 12px;border-radius:8px;font-size:13px}
+.svc-row input:first-child{flex:2}
+.svc-row input:nth-child(2){flex:1}
+.btn-add-svc{background:transparent;border:1px dashed #2a3a4a;color:#8899aa;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px;margin-top:4px;width:100%}
+.btn-add-svc:hover{border-color:#f0a500;color:#f0a500}
+.btn-del-svc{background:#2a3a4a;border:none;color:#f44336;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px}
+.btn-del-svc:hover{background:#f44336;color:#fff}
+.total-linha{text-align:right;margin-top:12px;font-size:14px;color:#8899aa}
+.total-linha span{font-size:20px;font-weight:700;color:#4caf50;margin-left:8px}
+.form-footer{display:flex;gap:12px;justify-content:flex-end;margin-top:8px;padding-bottom:24px}
+.btn-cancelar{background:#2a3a4a;color:#e0e0e0;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;text-decoration:none}
+.btn-salvar{background:#f0a500;color:#1a1a2e;border:none;padding:10px 32px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.btn-salvar:hover{background:#d4920a}
+</style>
+
+<div class="pf-header">
+  <a href="{{ url_for('prospeccao') }}" class="btn-voltar"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+  <h2><i class="fa-solid fa-bullseye" style="color:#f0a500"></i> {{ 'Editar Proposta' if p else 'Nova Proposta' }}</h2>
+</div>
+
+<form method="post">
+
+  <div class="card-section">
+    <h5><i class="fa-solid fa-building"></i> Dados do Cliente</h5>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Empresa *</label>
+        <input type="text" name="empresa" value="{{ p['empresa'] if p else '' }}" required placeholder="Nome da empresa">
+      </div>
+      <div class="form-group">
+        <label>Nº da Proposta</label>
+        <input type="text" name="num_proposta" value="{{ p['num_proposta'] if p else '' }}" placeholder="Ex: PROP-2026-001">
+      </div>
+      <div class="form-group">
+        <label>Nome do Contato *</label>
+        <input type="text" name="contato" value="{{ p['contato'] if p else '' }}" required placeholder="Nome completo">
+      </div>
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" name="telefone" value="{{ p['telefone'] if p else '' }}" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" name="email" value="{{ p['email'] if p else '' }}" placeholder="email@empresa.com">
+      </div>
+      <div class="form-group">
+        <label>Data de Envio</label>
+        <input type="date" name="data_envio" value="{{ p['data_envio'] if p else '' }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="card-section">
+    <h5><i class="fa-solid fa-user-tie"></i> Responsável e Status</h5>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Responsável Interno *</label>
+        <input type="text" name="responsavel" value="{{ p['responsavel'] if p else '' }}" required placeholder="Nome do vendedor / responsável">
+      </div>
+      <div class="form-group">
+        <label>Status da Proposta</label>
+        <select name="status">
+          {% for s in status_list %}
+          <option value="{{ s }}" {{ 'selected' if p and p['status']==s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-section">
+    <h5><i class="fa-solid fa-list-check"></i> Serviços / Produtos Oferecidos</h5>
+    <div id="svcsContainer">
+      {% if p and p['svcs_lista'] %}
+        {% for s in p['svcs_lista'] %}
+        <div class="svc-row">
+          <input type="text" name="svc_nome" placeholder="Descrição do serviço" value="{{ s['nome'] }}">
+          <input type="number" name="svc_valor" placeholder="Valor R$" step="0.01" min="0" value="{{ s['valor'] }}" class="svc-valor" oninput="calcTotal()">
+          <button type="button" class="btn-del-svc" onclick="removerSvc(this)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="svc-row">
+          <input type="text" name="svc_nome" placeholder="Descrição do serviço">
+          <input type="number" name="svc_valor" placeholder="Valor R$" step="0.01" min="0" class="svc-valor" oninput="calcTotal()">
+          <button type="button" class="btn-del-svc" onclick="removerSvc(this)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      {% endif %}
+    </div>
+    <button type="button" class="btn-add-svc" onclick="adicionarSvc()">
+      <i class="fa-solid fa-plus"></i> Adicionar serviço
+    </button>
+    <div class="total-linha">Valor total da proposta: <span id="totalDisplay">R$ 0,00</span></div>
+  </div>
+
+  <div class="card-section">
+    <h5><i class="fa-solid fa-note-sticky"></i> Observações</h5>
+    <div class="form-grid full">
+      <div class="form-group">
+        <textarea name="observacoes" placeholder="Anotações, próximos passos, histórico de contato...">{{ p['observacoes'] if p else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <a href="{{ url_for('prospeccao') }}" class="btn-cancelar">Cancelar</a>
+    <button type="submit" class="btn-salvar">
+      <i class="fa-solid fa-floppy-disk"></i>
+      {{ 'Salvar alterações' if p else 'Cadastrar proposta' }}
+    </button>
+  </div>
+
+</form>
+
+<script>
+function adicionarSvc(){
+  var c=document.getElementById('svcsContainer');
+  var d=document.createElement('div');
+  d.className='svc-row';
+  d.innerHTML='<input type="text" name="svc_nome" placeholder="Descrição do serviço">'
+    +'<input type="number" name="svc_valor" placeholder="Valor R$" step="0.01" min="0" class="svc-valor" oninput="calcTotal()">'
+    +'<button type="button" class="btn-del-svc" onclick="removerSvc(this)"><i class="fa-solid fa-xmark"></i></button>';
+  c.appendChild(d);
+}
+function removerSvc(btn){btn.closest('.svc-row').remove();calcTotal();}
+function calcTotal(){
+  var t=0;
+  document.querySelectorAll('.svc-valor').forEach(function(i){t+=parseFloat(i.value||0);});
+  document.getElementById('totalDisplay').textContent='R$ '+t.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+calcTotal();
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Saúde da Empresa — WEARLUB{% endblock %}
+{% block content %}
+<div class="page-title">Saúde da Empresa</div>
+<div class="kpi-grid" style="grid-template-columns:1fr 1fr;max-width:600px;">
+  <div class="kpi-card">
+    <div class="kpi-icon" style="background:#fff3cd;color:#b8860b;"><i class="fa-solid fa-heart-pulse"></i></div>
+    <div>
+      <div class="kpi-label">Fundo de Emergência</div>
+      <div class="kpi-value gold">R$ {{ '%.2f'|format(saldo_saude) | replace('.',',') }}</div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+    <div>
+      <div class="kpi-label">Conta Normal</div>
+      <div class="kpi-value">R$ {{ '%.2f'|format(saldo_normal) | replace('.',',') }}</div>
+    </div>
+  </div>
+</div>
+<div class="card-panel" style="max-width:500px;">
+  <div class="card-panel-header">
+    <h5><i class="fa-solid fa-rotate" style="margin-right:8px;color:var(--gold-dark);"></i>Resgatar para Conta Normal</h5>
+    <button class="toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+  </div>
+  <div class="card-panel-body">
+    <form method="POST" action="{{ url_for('saude') }}">
+      <div class="form-group">
+        <label>Valor do Resgate (R$) — Disponível: R$ {{ '%.2f'|format(saldo_saude) }}</label>
+        <input type="text" name="valor" class="form-control valor-brl" placeholder="0,00" required>
+      </div>
+      <div class="form-group">
+        <label>Motivo / Destinação</label>
+        <input type="text" name="motivo" class="form-control" placeholder="Ex: Cobrir pagamento de fornecedor">
+      </div>
+      <button type="submit" class="btn btn-gold">
+        <i class="fa-solid fa-right-left"></i> Executar Resgate
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
