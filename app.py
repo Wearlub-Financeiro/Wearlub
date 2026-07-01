@@ -178,10 +178,14 @@ CARGOS = [
 
 
 def to_float(v):
-    """Converte '5.000,00' ou '5000.00' ou '5000' para float."""
+    """Converte '5.000,00' ou '5000.00' ou '5000' ou '5.000.00' para float."""
     v = str(v or '0').strip()
     if ',' in v:
         v = v.replace('.', '').replace(',', '.')
+    elif v.count('.') > 1:
+        # Ex: '12.000.00' (máscara usou ponto pra milhar E decimal) -> último ponto é o decimal
+        partes = v.split('.')
+        v = ''.join(partes[:-1]) + '.' + partes[-1]
     return float(v or 0)
 
 def get_cfg():
