@@ -135,6 +135,19 @@ def login_required(f):
         return f(*a, **kw)
     return deco
 
+def admin_required(f):
+    """Bloqueia o acesso de usuários com perfil != 'admin'.
+    Usuários comuns só podem acessar Prospecção e Cadastros."""
+    @wraps(f)
+    def deco(*a, **kw):
+        if 'usuario_id' not in session:
+            return redirect(url_for('login'))
+        if session.get('usuario_perfil') != 'admin':
+            flash('Acesso restrito a administradores.', 'danger')
+            return redirect(url_for('prospeccao'))
+        return f(*a, **kw)
+    return deco
+
 # ─── HELPERS ──────────────────────────────────────────────────────────────────
 CATEGORIAS_RECEITA = [
     'Serviço - Filtragem Industrial','Serviço - Análise de Vibração',
@@ -225,11 +238,15 @@ def get_alertas():
     return alertas
 
 # ─── LOGIN / LOGOUT ───────────────────────────────────────────────────────────
+def home_route():
+    """Rota inicial de cada perfil: admin vai pro Painel, usuário comum vai pra Prospecção."""
+    return 'dashboard' if session.get('usuario_perfil') == 'admin' else 'prospeccao'
+
 @app.route('/', methods=['GET','POST'])
 @app.route('/login', methods=['GET','POST'])
 def login():
     if 'usuario_id' in session:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for(home_route()))
     erro = None
     if request.method == 'POST':
         u = request.form.get('usuario','').strip()
@@ -243,7 +260,7 @@ def login():
             session['usuario_id']     = user['id']
             session['usuario_nome']   = user['nome']
             session['usuario_perfil'] = user['perfil']
-            return redirect(url_for('dashboard'))
+            return redirect(url_for(home_route()))
         erro = 'Usuário ou senha inválidos.'
     return render_template('login.html', erro=erro, ano=date.today().year)
 
@@ -254,7 +271,7 @@ def logout():
 
 # ─── DASHBOARD ────────────────────────────────────────────────────────────────
 @app.route('/dashboard')
-@login_required
+@admin_required
 def dashboard():
     sn, ss, rp, pp = calcular_saldos()
     conn = get_db()
@@ -274,7 +291,7 @@ def dashboard():
 
 # ─── FLUXO DE CAIXA ───────────────────────────────────────────────────────────
 @app.route('/financeiro/fluxo')
-@login_required
+@admin_required
 def fluxo_caixa():
     conn = get_db()
     rows = execute(conn, "SELECT * FROM fluxo_caixa ORDER BY id DESC").fetchall()
@@ -283,7 +300,7 @@ def fluxo_caixa():
 
 # ─── RECEITA ──────────────────────────────────────────────────────────────────
 @app.route('/financeiro/receita', methods=['GET','POST'])
-@login_required
+@admin_required
 def receita():
     cfg = get_cfg()
     if request.method == 'POST':
@@ -348,7 +365,7 @@ def receita():
 
 # ─── DESPESA ──────────────────────────────────────────────────────────────────
 @app.route('/financeiro/despesa', methods=['GET','POST'])
-@login_required
+@admin_required
 def despesa():
     if request.method == 'POST':
         origem  = request.form.get('origem_conta','Conta Normal')
@@ -376,7 +393,7 @@ def despesa():
 
 # ─── SAÚDE ────────────────────────────────────────────────────────────────────
 @app.route('/financeiro/saude', methods=['GET','POST'])
-@login_required
+@admin_required
 def saude():
     sn, ss, _, _ = calcular_saldos()
     if request.method == 'POST':
@@ -400,7 +417,7 @@ def saude():
 
 # ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 @app.route('/configuracoes', methods=['GET','POST'])
-@login_required
+@admin_required
 def configuracoes():
     if request.method == 'POST':
         conn = get_db()
@@ -518,7 +535,7 @@ def funcionario_excluir(id):
 
 # ─── USUÁRIOS ─────────────────────────────────────────────────────────────────
 @app.route('/cadastros/usuarios')
-@login_required
+@admin_required
 def usuarios():
     conn = get_db()
     rows = execute(conn, "SELECT id,nome,login,perfil FROM usuarios ORDER BY nome").fetchall()
@@ -526,7 +543,7 @@ def usuarios():
     return render_template('usuarios.html', usuarios=rows)
 
 @app.route('/cadastros/usuarios/novo', methods=['GET','POST'])
-@login_required
+@admin_required
 def usuario_novo():
     if request.method == 'POST':
         nome   = request.form.get('nome','').strip()
@@ -548,7 +565,7 @@ def usuario_novo():
     return render_template('usuario_form.html', u=None)
 
 @app.route('/cadastros/usuarios/editar/<int:id>', methods=['GET','POST'])
-@login_required
+@admin_required
 def usuario_editar(id):
     conn = get_db()
     if request.method == 'POST':
@@ -570,7 +587,7 @@ def usuario_editar(id):
     return render_template('usuario_form.html', u=u)
 
 @app.route('/cadastros/usuarios/excluir/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def usuario_excluir(id):
     conn = get_db()
     execute(conn, "DELETE FROM usuarios WHERE id=%s", (id,))
@@ -580,7 +597,7 @@ def usuario_excluir(id):
 
 # ─── DADOS PARA GRÁFICOS ──────────────────────────────────────────────────────
 @app.route('/api/graficos')
-@login_required
+@admin_required
 def api_graficos():
     conn = get_db()
     rows = execute(conn, "SELECT * FROM fluxo_caixa WHERE status='Pago/Recebido'").fetchall()
@@ -627,14 +644,13 @@ def api_graficos():
 
 # ─── EDITAR / EXCLUIR LANÇAMENTO ──────────────────────────────────────────────
 @app.route('/financeiro/lancamento/editar/<int:id>', methods=['GET','POST'])
-@login_required
+@admin_required
 def lancamento_editar(id):
     conn = get_db()
     if request.method == 'POST':
         cat     = request.form.get('categoria','')
         desc    = request.form.get('descricao','')
-        v_str   = request.form.get('valor_bruto','0').replace('.','').replace(',','.')
-        v       = float(v_str or 0)
+        v       = to_float(request.form.get('valor_bruto','0'))
         dt_ven  = request.form.get('data_vencimento','')
         status  = request.form.get('status','Pendente')
         origem  = request.form.get('origem_conta','Conta Normal')
@@ -653,7 +669,7 @@ def lancamento_editar(id):
     return render_template('lancamento_editar.html', l=l, categorias=cats)
 
 @app.route('/financeiro/lancamento/excluir/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def lancamento_excluir(id):
     conn = get_db()
     execute(conn, "DELETE FROM fluxo_caixa WHERE id=%s", (id,))
